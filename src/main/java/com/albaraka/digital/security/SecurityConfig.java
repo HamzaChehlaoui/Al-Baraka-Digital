@@ -40,11 +40,13 @@ public class SecurityConfig {
                                 "/configuration/security",
                                 "/swagger-ui/**",
                                 "/webjars/**",
-                                "/swagger-ui.html")
+                                "/swagger-ui.html",
+                                "/actuator/health")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/agent/**").hasAnyRole("AGENT", "ADMIN")
                         .requestMatchers("/api/client/**").hasRole("CLIENT")
+                        .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
