@@ -1,0 +1,60 @@
+# Maven build artifacts
+target/
+!target/*.jar
+*.class
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+DOCKER.md
+docs/
+
+# Test files
+src/test/
+**/test/
+
+# Database
+*.db
+*.sqlite
+
+# Uploads (local development)
+uploads/
+
+# Docker files (avoid recursion)
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Other
+*.md
+LICENSE
