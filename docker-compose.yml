@@ -1,19 +1,73 @@
 version: '3.8'
+
 services:
-  app:
-    build: .
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: albaraka-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-albarakadb}
+      MYSQL_USER: ${DB_USER:-albaraka}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-albaraka123}
+      TZ: Africa/Casablanca
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - albaraka-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Backend Application Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: albaraka-backend
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      - DB_URL=jdbc:postgresql://db:5432/albarakadb
-      - DB_USER=postgres
-      - DB_PASSWORD=password
+      # Database Configuration
+      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-albarakadb}?createDatabaseIfNotExist=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USER: ${DB_USER:-albaraka}
+      DB_PASSWORD: ${DB_PASSWORD:-albaraka123}
+      
+      # JWT Configuration
+      JWT_SECRET: ${JWT_SECRET:-al-baraka-digital-secret-key-2024-very-secure-jwt-token-minimum-256-bits}
+      
+      # Upload Path
+      UPLOAD_PATH: /app/uploads
+      
+      # JVM Options
+      JAVA_OPTS: -Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
-      - db
-  
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=albarakadb
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      mysql:
+        condition: service_healthy
+    networks:
+      - albaraka-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+# Networks
+networks:
+  albaraka-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
