@@ -1,10 +1,8 @@
-# Stage 1: Build
 FROM maven:3.9-eclipse-temurin-17-alpine AS build
 
 # Set working directory
 WORKDIR /app
 
-# Copy pom.xml first (for layer caching)
 COPY pom.xml ./
 
 # Download dependencies (cached layer if pom.xml hasn't changed)
@@ -28,7 +26,9 @@ RUN addgroup -S spring && adduser -S spring -G spring
 # Copy the JAR from build stage
 COPY --from=build /app/target/*.jar app.jar
 
-# Create directory for uploads
+# Create directory for uploads and set ownership
+# Note: When the Docker volume is mounted at runtime, it will preserve files
+# but the directory must exist with proper permissions for the spring user
 RUN mkdir -p /app/uploads && chown -R spring:spring /app
 
 # Change to non-root user

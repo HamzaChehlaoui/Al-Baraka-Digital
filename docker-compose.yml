@@ -41,13 +41,18 @@ services:
       # JWT Configuration
       JWT_SECRET: ${JWT_SECRET:-al-baraka-digital-secret-key-2024-very-secure-jwt-token-minimum-256-bits}
       
+      # OAuth2 Resource Server Configuration
+      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:-http://albaraka-keycloak:8080/realms/al-baraka}
+      OAUTH2_JWK_SET_URI: ${OAUTH2_JWK_SET_URI:-http://albaraka-keycloak:8080/realms/al-baraka/protocol/openid-connect/certs}
+      
       # Upload Path
       UPLOAD_PATH: /app/uploads
       
       # JVM Options
       JAVA_OPTS: -Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom
     volumes:
-      - uploads_data:/app/uploads
+      # Bind mount
+      - ./uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -59,6 +64,22 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+  # Keycloak OAuth2 Authorization Server
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.4
+    container_name: albaraka-keycloak
+    command: start-dev
+    restart: unless-stopped
+    ports:
+      - "8180:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    networks:
+      - albaraka-network
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
 
 # Networks
 networks:
@@ -69,5 +90,9 @@ networks:
 volumes:
   mysql_data:
     driver: local
-  uploads_data:
+  keycloak_data:
     driver: local
+  # uploads_data: removed - now using bind mount (./uploads) instead
+
+
+
