@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operation Details - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('pending')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('Operation Details', 'Review operation information and AI validation results')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <div class="content-grid grid-2">
+                    <!-- Operation Information -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <h3>Operation Information</h3>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;" th:if="${operation != null}">
+                            <div>
+                                <label class="form-label">Operation ID</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem; font-family: monospace;">
+                                    <strong th:text="'#' + ${operation.id}">#123</strong>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Type</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:switch="${operation.type.name()}">
+                                        <span th:case="'DEPOSIT'">💵 Deposit</span>
+                                        <span th:case="'WITHDRAWAL'">💸 Withdrawal</span>
+                                        <span th:case="'TRANSFER'">🔄 Transfer</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Amount</label>
+                                <div style="padding: 1.25rem; background: linear-gradient(135deg, rgba(26, 147, 111, 0.15), rgba(16, 185, 129, 0.1)); border-radius: 0.75rem;">
+                                    <span style="font-size: 2rem; font-weight: 700; color: var(--primary-light);" 
+                                          th:text="${operation.amount} + ' DH'">15000 DH</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Description</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${operation.description != null ? operation.description : '-'}">Operation description</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Status</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${operation.status}" 
+                                          th:class="'badge badge-' + ${operation.status.name().toLowerCase()}">
+                                        PENDING
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Date & Time</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${#temporals.format(operation.date, 'dd MMMM yyyy HH:mm:ss')}">01 January 2024 10:00:00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${operation == null}" class="text-center text-muted" style="padding: 2rem;">
+                            Operation not found
+                        </div>
+                    </div>
+
+                    <!-- Client Information -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <h3>Client Information</h3>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem;" th:if="${operation?.account?.user != null}">
+                            <div>
+                                <label class="form-label">Client Name</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${operation.account.user.name}">Client Name</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Email</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${operation.account.user.email}">client@example.com</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Account Number</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem; font-family: monospace;">
+                                    <span th:text="${operation.account.accountNumber}">ACC-123456789</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Current Balance</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <span th:text="${operation.account.balance} + ' DH'">25000 DH</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Validation Result -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <h3>🤖 AI Validation Result</h3>
+                        </div>
+                        
+                        <div th:if="${aiValidation != null}">
+                            <div style="margin-bottom: 1.5rem;">
+                                <label class="form-label">AI Recommendation</label>
+                                <div style="padding: 1rem; border-radius: 0.75rem;"
+                                     th:style="${aiValidation.status.name() == 'APPROVE'} ? 'background: rgba(16, 185, 129, 0.15);' : 
+                                               (${aiValidation.status.name() == 'REJECT'} ? 'background: rgba(239, 68, 68, 0.15);' : 
+                                               'background: rgba(245, 158, 11, 0.15);')">
+                                    <span th:text="${aiValidation.status}" 
+                                          th:class="'badge badge-' + ${aiValidation.status.name().toLowerCase()}" 
+                                          style="font-size: 1rem;">
+                                        APPROVE
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 1.5rem;">
+                                <label class="form-label">AI Reasoning</label>
+                                <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <p th:text="${aiValidation.reasoning}" style="margin: 0;">
+                                        AI analysis reasoning will appear here
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label">Confidence Score</label>
+                                <div style="padding: 0.875rem; background: rgba(255,255,255,0.03); border-radius: 0.75rem;">
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="flex: 1; background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+                                            <div th:style="'width: ' + ${aiValidation.confidence * 100} + '%; background: var(--primary); height: 100%;'"></div>
+                                        </div>
+                                        <span th:text="${#numbers.formatDecimal(aiValidation.confidence * 100, 1, 1)} + '%'">85%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${aiValidation == null}" class="text-center text-muted" style="padding: 2rem;">
+                            <div style="font-size: 2rem; margin-bottom: 1rem;">🤖</div>
+                            <p>No AI validation result available</p>
+                            <p style="font-size: 0.875rem;">Document may not have been uploaded yet</p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <h3>Review Actions</h3>
+                        </div>
+                        
+                        <div th:if="${operation != null && operation.status.name() == 'PENDING'}">
+                            <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.875rem;">
+                                Review the operation details and AI recommendation before making a decision.
+                            </p>
+
+                            <div style="display: flex; gap: 1rem;">
+                                <form th:action="@{/agent/operations/review}" method="post" style="flex: 1;">
+                                    <input type="hidden" name="operationId" th:value="${operation.id}">
+                                    <input type="hidden" name="action" value="APPROVE">
+                                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                                        <span>✓</span>
+                                        <span>Approve Operation</span>
+                                    </button>
+                                </form>
+
+                                <form th:action="@{/agent/operations/review}" method="post" style="flex: 1;">
+                                    <input type="hidden" name="operationId" th:value="${operation.id}">
+                                    <input type="hidden" name="action" value="REJECT">
+                                    <button type="submit" class="btn btn-danger" style="width: 100%;">
+                                        <span>✗</span>
+                                        <span>Reject Operation</span>
+                                    </button>
+                                </form>
+                            </div>
+
+                            <div style="margin-top: 1rem;">
+                                <a th:href="@{/agent/pending}" class="btn btn-secondary" style="width: 100%;">
+                                    ← Back to Pending List
+                                </a>
+                            </div>
+                        </div>
+
+                        <div th:if="${operation != null && operation.status.name() != 'PENDING'}">
+                            <div class="text-center" style="padding: 1.5rem;">
+                                <p>This operation has already been processed.</p>
+                                <a th:href="@{/agent/pending}" class="btn btn-primary" style="margin-top: 1rem;">
+                                    ← Back to Pending List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

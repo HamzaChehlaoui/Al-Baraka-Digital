@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('Dashboard', 'Welcome back! Plan, prioritize, and accomplish your goals with ease.')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>💰</span>
+                            <span>Total Balance</span>
+                        </div>
+                        <div class="stat-value" th:text="${accountBalance != null ? accountBalance + ' DH' : '0.00 DH'}">0.00 DH</div>
+                        <div class="stat-trend positive">
+                            <span>↗</span>
+                            <span>Available Balance</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>⏳</span>
+                            <span>Pending Operations</span>
+                        </div>
+                        <div class="stat-value" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
+                        <div class="stat-trend">
+                            <span>Under Review</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>📊</span>
+                            <span>Total Transactions</span>
+                        </div>
+                        <div class="stat-value" th:text="${totalOperations != null ? totalOperations : 0}">0</div>
+                        <div class="stat-trend positive">
+                            <span>All Time</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>📅</span>
+                            <span>This Month</span>
+                        </div>
+                        <div class="stat-value" th:text="${monthlyOperations != null ? monthlyOperations : 0}">0</div>
+                        <div class="stat-trend">
+                            <span>Operations</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Operation Form -->
+                <div class="glass card mb-4">
+                    <div class="card-header">
+                        <h3>New Operation</h3>
+                        <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.5rem;">
+                            Create a new banking operation. Operations over 10,000 DH require document justification.
+                        </p>
+                    </div>
+                    
+                    <form th:action="@{/client/operations/create}" method="post" enctype="multipart/form-data">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Operation Type</label>
+                                <select name="type" class="form-control" required>
+                                    <option value="DEPOSIT">💵 Deposit</option>
+                                    <option value="WITHDRAWAL">💸 Withdrawal</option>
+                                    <option value="TRANSFER">🔄 Transfer</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Amount (DH)</label>
+                                <input type="number" name="amount" step="0.01" min="0.01" class="form-control" 
+                                       placeholder="0.00" required>
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label class="form-label">Target Account (for transfers)</label>
+                                <input type="text" name="targetAccountNumber" class="form-control" 
+                                       placeholder="Optional">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <input type="text" name="description" class="form-control" 
+                                   placeholder="Add a note about this operation">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Justification Document (Required for amounts > 10,000 DH)</label>
+                            <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                            <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
+                                Accepted formats: PDF, JPG, PNG. Max size: 5MB
+                            </p>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <span>✓</span>
+                            <span>Submit Operation</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Recent Operations Table -->
+                <div class="glass card">
+                    <div class="card-header">
+                        <h3>Recent Operations</h3>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="op : ${operations}">
+                                    <td th:text="${op.id}">#1</td>
+                                    <td>
+                                        <span th:switch="${op.type.name()}">
+                                            <span th:case="'DEPOSIT'">💵 Deposit</span>
+                                            <span th:case="'WITHDRAWAL'">💸 Withdrawal</span>
+                                            <span th:case="'TRANSFER'">🔄 Transfer</span>
+                                        </span>
+                                    </td>
+                                    <td th:text="${op.amount} + ' DH'">1000 DH</td>
+                                    <td th:text="${op.description != null ? op.description : '-'}">Payment</td>
+                                    <td>
+                                        <span th:text="${op.status}" 
+                                              th:class="'badge badge-' + ${op.status.name().toLowerCase()}">
+                                            PENDING
+                                        </span>
+                                    </td>
+                                    <td th:text="${#temporals.format(op.date, 'dd-MM-yyyy HH:mm')}">01-01-2024 10:00</td>
+                                </tr>
+                                <tr th:if="${operations == null || operations.empty}">
+                                    <td colspan="6" class="text-center text-muted">
+                                        No operations found. Create your first operation above!
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 1.5rem; text-align: center;" th:if="${operations != null && !operations.empty}">
+                        <a th:href="@{/client/operations}" class="btn btn-secondary">
+                            <span>View All Operations</span>
+                            <span>→</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

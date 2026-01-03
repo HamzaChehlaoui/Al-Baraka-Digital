@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('operations')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('All Operations', 'View and manage your complete operation history')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- All Operations Table -->
+                <div class="glass card">
+                    <div class="card-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3>Operation History</h3>
+                            <a th:href="@{/client/dashboard}" class="btn btn-primary btn-sm">
+                                <span>+</span>
+                                <span>New Operation</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="op : ${operations}">
+                                    <td th:text="${op.id}">#1</td>
+                                    <td>
+                                        <span th:switch="${op.type.name()}">
+                                            <span th:case="'DEPOSIT'">💵 Deposit</span>
+                                            <span th:case="'WITHDRAWAL'">💸 Withdrawal</span>
+                                            <span th:case="'TRANSFER'">🔄 Transfer</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong th:text="${op.amount} + ' DH'">1000 DH</strong>
+                                    </td>
+                                    <td th:text="${op.description != null ? op.description : '-'}">Payment</td>
+                                    <td>
+                                        <span th:text="${op.status}" 
+                                              th:class="'badge badge-' + ${op.status.name().toLowerCase()}">
+                                            PENDING
+                                        </span>
+                                    </td>
+                                    <td th:text="${#temporals.format(op.date, 'dd-MM-yyyy HH:mm')}">01-01-2024 10:00</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <a th:if="${op.status.name() == 'PENDING'}" 
+                                               th:href="@{'/client/operations/' + ${op.id} + '/upload'}" 
+                                               class="btn btn-sm btn-secondary"
+                                               title="Upload Document">
+                                                📎
+                                            </a>
+                                            <button class="btn btn-sm btn-secondary" title="View Details">👁️</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${operations == null || operations.empty}">
+                                    <td colspan="7" class="text-center text-muted">
+                                        <div style="padding: 3rem;">
+                                            <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                                            <p>No operations found.</p>
+                                            <a th:href="@{/client/dashboard}" class="btn btn-primary" style="margin-top: 1rem;">
+                                                Create First Operation
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

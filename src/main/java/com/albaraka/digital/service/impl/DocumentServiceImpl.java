@@ -1,21 +1,29 @@
 package com.albaraka.digital.service.impl;
 
+import com.albaraka.digital.dto.ai.AiValidationResult;
 import com.albaraka.digital.dto.response.DocumentDto;
 import com.albaraka.digital.exception.InvalidOperationException;
 import com.albaraka.digital.exception.ResourceNotFoundException;
 import com.albaraka.digital.mapper.OperationMapper;
 import com.albaraka.digital.model.Document;
 import com.albaraka.digital.model.Operation;
+import com.albaraka.digital.model.enums.AiValidationStatus;
+import com.albaraka.digital.model.enums.OperationStatus;
 import com.albaraka.digital.repository.DocumentRepository;
 import com.albaraka.digital.repository.OperationRepository;
 import com.albaraka.digital.service.DocumentService;
+import com.albaraka.digital.service.OperationService;
+import com.albaraka.digital.service.SmartValidationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,17 +34,23 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final OperationRepository operationRepository;
     private final OperationMapper operationMapper;
+    private final SmartValidationService smartValidationService;
+    private final OperationService operationService;
 
     @Value("${business.document.upload-path:./uploads}")
     private String uploadPath;
 
     @Value("${business.document.allowed-types:pdf,jpg,jpeg,png}")
     private String allowedTypes;
+
+    @Value("${business.operation.auto-validation-threshold:10000}")
+    private BigDecimal autoValidationThreshold;
 
     @Override
     @Transactional
@@ -73,13 +87,39 @@ public class DocumentServiceImpl implements DocumentService {
                 .build();
 
         Document savedDocument = documentRepository.save(document);
+
+        // Smart Validation Logic
+        if (operation.getAmount().compareTo(autoValidationThreshold) > 0 &&
+                operation.getStatus() == OperationStatus.PENDING) {
+
+            log.info("Triggering Smart Validation for Operation ID: {}", operationId);
+            try {
+                FileSystemResource resource = new FileSystemResource(filePath.toFile());
+                String details = String.format("Operation Type: %s, Amount: %s, Description: %s",
+                        operation.getType(), operation.getAmount(), operation.getDescription());
+
+                AiValidationResult result = smartValidationService.validateDocument(resource, details);
+                log.info("Smart Validation Result: {}", result);
+
+                if (result.getStatus() == AiValidationStatus.APPROVE) {
+                    operationService.approveOperation(operation.getId());
+                } else if (result.getStatus() == AiValidationStatus.REJECT) {
+                    operationService.rejectOperation(operation.getId());
+                }
+                // If NEED_HUMAN_REVIEW, no action needed (stays PENDING)
+
+            } catch (Exception e) {
+                log.error("Smart validation process failed, leaving operation as PENDING", e);
+            }
+        }
+
         return operationMapper.toDocumentDto(savedDocument);
     }
 
     @Override
     public List<DocumentDto> getDocumentsByOperationId(Long operationId) {
-        List<Document> documents = documentRepository.findByOperationId(operationId);
-        return operationMapper.toDocumentDtoList(documents);
+        List<DocumentDto> docs = operationMapper.toDocumentDtoList(documentRepository.findByOperationId(operationId));
+        return docs;
     }
 
     @Override

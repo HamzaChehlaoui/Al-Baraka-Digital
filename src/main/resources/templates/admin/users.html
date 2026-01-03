@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('users')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('User Management', 'Manage user accounts and permissions')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- All Users Table -->
+                <div class="glass card">
+                    <div class="card-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3>All Users</h3>
+                                <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                    <span th:text="${users != null ? users.size() : 0}">0</span> registered users
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td th:text="'#' + ${user.id}">#1</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">
+                                                <span th:text="${#strings.substring(user.name, 0, 1)}">U</span>
+                                            </div>
+                                            <span th:text="${user.name}">John Doe</span>
+                                        </div>
+                                    </td>
+                                    <td th:text="${user.email}">user@example.com</td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${user.role.name() == 'ADMIN'} ? 'badge-info' : (${user.role.name() == 'AGENT'} ? 'badge-approved' : 'badge-pending')"
+                                              th:text="${user.role}">
+                                            CLIENT
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" 
+                                              th:classappend="${user.active} ? 'badge-approved' : 'badge-rejected'"
+                                              th:text="${user.active ? 'Active' : 'Inactive'}">
+                                            Active
+                                        </span>
+                                    </td>
+                                    <td th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd-MM-yyyy') : 'N/A'}">01-01-2024</td>
+                                </tr>
+                                <tr th:if="${users == null || users.empty}">
+                                    <td colspan="7" class="text-center text-muted">
+                                        <div style="padding: 3rem;">
+                                            <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+                                            <p>No users found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

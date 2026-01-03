@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('Admin Dashboard', 'System overview and management')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Statistics Cards -->
+                <div class=" stats-grid">
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>👥</span>
+                            <span>Total Users</span>
+                        </div>
+                        <div class="stat-value" th:text="${totalUsers != null ? totalUsers : 0}">0</div>
+                        <div class="stat-trend positive">
+                            <span>↗</span>
+                            <span>Registered</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>💼</span>
+                            <span>Total Accounts</span>
+                        </div>
+                        <div class="stat-value" th:text="${totalAccounts != null ? totalAccounts : 0}">0</div>
+                        <div class="stat-trend">
+                            <span>Active</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>📊</span>
+                            <span>Operations Today</span>
+                        </div>
+                        <div class="stat-value" th:text="${operationsToday != null ? operationsToday : 0}">0</div>
+                        <div class="stat-trend positive">
+                            <span>Processed</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>🟢</span>
+                            <span>System Health</span>
+                        </div>
+                        <div class="stat-value" style="color: var(--success);">100%</div>
+                        <div class="stat-trend positive">
+                            <span>✓</span>
+                            <span>All Systems Operational</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-grid grid-2">
+                    <!-- Recent Users -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3>Recent Users</h3>
+                                <a th:href="@{/admin/users}" class="btn btn-primary btn-sm">
+                                    <span>View All</span>
+                                    <span>→</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="user, iterStat : ${users}" th:if="${iterStat.index < 5}">
+                                        <td th:text="${user.name}">John Doe</td>
+                                        <td>
+                                            <span class="badge badge-info" th:text="${user.role}">CLIENT</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-approved" th:text="${user.active ? 'Active' : 'Inactive'}">Active</span>
+                                        </td>
+                                    </tr>
+                                    <tr th:if="${users == null || users.empty}">
+                                        <td colspan="3" class="text-center text-muted">No users</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- System Statistics -->
+                    <div class="glass card">
+                        <div class="card-header">
+                            <h3>Operations Overview</h3>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 0.5rem;">
+                                <span class="text-muted">Pending</span>
+                                <strong th:text="${pendingOperations != null ? pendingOperations : 0}">0</strong>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 0.5rem;">
+                                <span class="text-muted">Approved Today</span>
+                                <strong th:text="${approvedToday != null ? approvedToday : 0}">0</strong>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 0.5rem;">
+                                <span class="text-muted">Rejected Today</span>
+                                <strong th:text="${rejectedToday != null ? rejectedToday : 0}">0</strong>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 0.5rem;">
+                                <span class="text-muted">AI Auto-Approved</span>
+                                <strong th:text="${aiAutoApproved != null ? aiAutoApproved : 0}">0</strong>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.5rem;">
+                            <a th:href="@{/admin/statistics}" class="btn btn-secondary" style="width: 100%;">
+                                <span>📈</span>
+                                <span>View Detailed Statistics</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glass card" style="margin-top: 1.5rem;">
+                    <div class="card-header">
+                        <h3>Quick Actions</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <a th:href="@{/admin/users}" class="btn btn-primary">
+                            <span>👥</span>
+                            <span>Manage Users</span>
+                        </a>
+                        <a th:href="@{/admin/statistics}" class="btn btn-secondary">
+                            <span>📊</span>
+                            <span>View Statistics</span>
+                        </a>
+                        <a th:href="@{/agent/pending}" class="btn btn-secondary">
+                            <span>⏳</span>
+                            <span>Pending Operations</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

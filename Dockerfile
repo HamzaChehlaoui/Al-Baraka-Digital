@@ -27,8 +27,6 @@ RUN addgroup -S spring && adduser -S spring -G spring
 COPY --from=build /app/target/*.jar app.jar
 
 # Create directory for uploads and set ownership
-# Note: When the Docker volume is mounted at runtime, it will preserve files
-# but the directory must exist with proper permissions for the spring user
 RUN mkdir -p /app/uploads && chown -R spring:spring /app
 
 # Change to non-root user

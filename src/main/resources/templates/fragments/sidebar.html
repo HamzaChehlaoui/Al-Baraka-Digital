@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- Sidebar Fragment -->
+<div th:fragment="sidebar(activeMenu)" class="sidebar glass">
+    <!-- Logo -->
+    <div class="sidebar-logo">
+        <div class="sidebar-logo-icon"><i class="fa-solid fa-building-columns"></i></div>
+        <div class="sidebar-logo-text">
+            <h3>Al Baraka</h3>
+            <p>Digital Banking</p>
+        </div>
+    </div>
+
+    <!-- CLIENT Navigation -->
+    <div sec:authorize="hasRole('CLIENT')">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">MENU</div>
+            <a th:href="@{/client/dashboard}" 
+               th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <span>Dashboard</span>
+            </a>
+            <a th:href="@{/client/operations}" 
+               th:classappend="${activeMenu == 'operations'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-money-bill-transfer"></i></span>
+                <span>Operations</span>
+            </a>
+            <a th:href="@{/client/profile}" 
+               th:classappend="${activeMenu == 'profile'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-user"></i></span>
+                <span>Profile</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">GENERAL</div>
+            <a href="#" class="nav-link" style="opacity: 0.5; pointer-events: none;">
+                <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                <span>Settings</span>
+            </a>
+            <a href="#" class="nav-link" style="opacity: 0.5; pointer-events: none;">
+                <span class="nav-icon"><i class="fa-solid fa-circle-question"></i></span>
+                <span>Help</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- AGENT Navigation -->
+    <div sec:authorize="hasRole('AGENT')">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">MENU</div>
+            <a th:href="@{/agent/dashboard}" 
+               th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <span>Dashboard</span>
+            </a>
+            <a th:href="@{/agent/pending}" 
+               th:classappend="${activeMenu == 'pending'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-clock"></i></span>
+                <span>Pending Operations</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">GENERAL</div>
+            <a href="#" class="nav-link" style="opacity: 0.5; pointer-events: none;">
+                <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                <span>Settings</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ADMIN Navigation -->
+    <div sec:authorize="hasRole('ADMIN')">
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">MENU</div>
+            <aث th:href="@{/admin/dashboard}" 
+               th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-chart-line"></i></span>
+                <span>Dashboard</span>
+            </a>
+            <a th:href="@{/admin/users}" 
+               th:classappend="${activeMenu == 'users'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-users"></i></span>
+                <span>Users</span>
+            </a>
+            <a th:href="@{/admin/statistics}" 
+               th:classappend="${activeMenu == 'statistics'} ? 'active' : ''" 
+               class="nav-link">
+                <span class="nav-icon"><i class="fa-solid fa-chart-column"></i></span>
+                <span>Statistics</span>
+            </a>
+        </div>
+        
+        <div class="sidebar-section">
+            <div class="sidebar-section-title">GENERAL</div>
+            <a href="#" class="nav-link" style="opacity: 0.5; pointer-events: none;">
+                <span class="nav-icon"><i class="fa-solid fa-gear"></i></span>
+                <span>Settings</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- User Info & Logout -->
+    <div class="sidebar-footer">
+        <div class="sidebar-user">
+            <div class="sidebar-user-avatar" th:text="${#strings.substring(user?.name ?: 'U', 0, 1)}">U</div>
+            <div class="sidebar-user-info">
+                <h5 th:text="${user?.name ?: 'User'}">User</h5>
+                <p sec:authentication="principal.authorities">Role</p>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post" style="width: 100%;">
+            <button type="submit" class="btn btn-danger" style="width: 100%; font-size: 0.875rem;">
+                <span><i class="fa-solid fa-right-from-bracket"></i></span>
+                <span>Logout</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+</html>

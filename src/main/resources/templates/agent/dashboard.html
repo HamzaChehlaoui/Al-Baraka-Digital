@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard - Al Baraka Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div th:replace="~{fragments/sidebar :: sidebar('dashboard')}"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <div th:replace="~{fragments/header :: header('Agent Dashboard', 'Monitor and manage pending operations')}"></div>
+
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Statistics Cards -->
+                <div class="stats-grid">
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>⏳</span>
+                            <span>Pending Operations</span>
+                        </div>
+                        <div class="stat-value" th:text="${pendingCount != null ? pendingCount : 0}">0</div>
+                        <div class="stat-trend">
+                            <span>Awaiting Review</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>✅</span>
+                            <span>Approved Today</span>
+                        </div>
+                        <div class="stat-value" th:text="${approvedToday != null ? approvedToday : 0}">0</div>
+                        <div class="stat-trend positive">
+                            <span>↗</span>
+                            <span>Processed</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>❌</span>
+                            <span>Rejected Today</span>
+                        </div>
+                        <div class="stat-value" th:text="${rejectedToday != null ? rejectedToday : 0}">0</div>
+                        <div class="stat-trend negative">
+                            <span>Declined</span>
+                        </div>
+                    </div>
+
+                    <div class="glass card stat-card">
+                        <div class="stat-label">
+                            <span>🤖</span>
+                            <span>AI Auto-Approved</span>
+                        </div>
+                        <div class="stat-value" th:text="${aiApproved != null ? aiApproved : 0}">0</div>
+                        <div class="stat-trend">
+                            <span>Smart Validation</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Priority Operations -->
+                <div class="glass card mb-4">
+                    <div class="card-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3>Priority Operations</h3>
+                                <p class="text-muted" style="font-size: 0.875rem; margin-top: 0.5rem;">
+                                    High-value operations requiring immediate attention
+                                </p>
+                            </div>
+                            <a th:href="@{/agent/pending}" class="btn btn-primary btn-sm">
+                                <span>View All Pending</span>
+                                <span>→</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Client</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>AI Status</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="op : ${${priorityOperations} != null ? ${priorityOperations} : (${pendingOperations} != null ? ${pendingOperations} : '')}">
+                                    <td th:text="${op.id}">#1</td>
+                                    <td th:text="${op.account?.user?.name ?: 'N/A'}">Client Name</td>
+                                    <td>
+                                        <span th:switch="${op.type.name()}">
+                                            <span th:case="'DEPOSIT'">💵 Deposit</span>
+                                            <span th:case="'WITHDRAWAL'">💸 Withdrawal</span>
+                                            <span th:case="'TRANSFER'">🔄 Transfer</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong th:text="${op.amount} + ' DH'" style="color: var(--primary-light);">15000 DH</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">AI Pending</span>
+                                    </td>
+                                    <td th:text="${#temporals.format(op.date, 'dd-MM-yyyy HH:mm')}">01-01-2024 10:00</td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <a th:href="@{'/agent/operations/' + ${op.id}}" class="btn btn-sm btn-secondary" title="View Details">
+                                                👁️
+                                            </a>
+                                            <form th:action="@{/agent/operations/review}" method="post" style="display: inline;">
+                                                <input type="hidden" name="operationId" th:value="${op.id}">
+                                                <input type="hidden" name="action" value="APPROVE">
+                                                <button type="submit" class="btn btn-sm btn-success" title="Approve">✓</button>
+                                            </form>
+                                            <form th:action="@{/agent/operations/review}" method="post" style="display: inline;">
+                                                <input type="hidden" name="operationId" th:value="${op.id}">
+                                                <input type="hidden" name="action" value="REJECT">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Reject">✗</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr th:if="${(priorityOperations == null || priorityOperations.empty) && (pendingOperations == null || pendingOperations.empty)}">
+                                    <td colspan="7" class="text-center text-muted">
+                                        <div style="padding: 3rem;">
+                                            <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                                            <p>No pending operations. All clear!</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="glass card">
+                    <div class="card-header">
+                        <h3>Recent Activity</h3>
+                    </div>
+                    <div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">
+                        <p>Activity timeline will be displayed here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

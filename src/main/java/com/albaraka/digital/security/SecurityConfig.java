@@ -29,7 +29,6 @@ public class SecurityConfig {
     /**
      * Chain 1: OAuth2 Resource Server
      * Handles ONLY /api/agent/operations/pending
-     * Uses OAuth2 Token (Keycloak)
      */
     @Bean
     @Order(1)
@@ -49,35 +48,20 @@ public class SecurityConfig {
     }
 
     /**
-     * Chain 2: Standard Application Security
-     * Handles everything else (Login, Register, Admin, Client, etc.)
-     * Uses Custom JWT (HS256)
+     * Chain 2: API Security (JWT)
+     * Handles /api/** (except the one above)
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain standardSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
+                .securityMatcher("/api/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
-                        .requestMatchers(
-                                "/api/auth/**",
-                                "/v2/api-docs",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/swagger-resources",
-                                "/swagger-resources/**",
-                                "/configuration/ui",
-                                "/configuration/security",
-                                "/swagger-ui/**",
-                                "/webjars/**",
-                                "/swagger-ui.html",
-                                "/actuator/health")
-                        .permitAll()
-                        // Other agent endpoints - require JWT with AGENT role
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/agent/**").hasAnyRole("AGENT", "ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/client/**").hasRole("CLIENT")
-                        .requestMatchers("/api/auth/logout").authenticated()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
@@ -87,33 +71,50 @@ public class SecurityConfig {
     }
 
     /**
-     * Custom JWT Decoder that validates tokens from localhost:8180 issuer
-     * while fetching JWK from Keycloak container
+     * Chain 3: Web Security (Thymeleaf + Form Login)
+     * Handles everything else (Views, Static resources)
      */
     @Bean
-    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
-        // Use localhost:8180 as the issuer (what Keycloak puts in tokens)
-        String issuerUri = "http://localhost:8180/realms/al-baraka";
+    @Order(3)
+    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/agent/**").hasAnyRole("AGENT", "ADMIN")
+                        .requestMatchers("/client/**").hasRole("CLIENT")
+                        .anyRequest().authenticated())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/", true)
+                        .permitAll())
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login?logout")
+                        .permitAll())
+                .rememberMe(remember -> remember
+                        .key("al-baraka-unique-and-secret")
+                        .tokenValiditySeconds(86400) // 1 day
+                        .userDetailsService(userDetailsService)) // Required for remember-me
+                .authenticationProvider(authenticationProvider()); // Uses same provider/UserDetailsService
 
+        return http.build();
+    }
+
+    @Bean
+    public org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder() {
+        String issuerUri = "http://localhost:8180/realms/al-baraka";
         org.springframework.security.oauth2.jwt.NimbusJwtDecoder jwtDecoder = org.springframework.security.oauth2.jwt.NimbusJwtDecoder
                 .withJwkSetUri("http://albaraka-keycloak:8080/realms/al-baraka/protocol/openid-connect/certs")
                 .build();
-
-        // Set expected issuer to localhost (what Keycloak uses)
         jwtDecoder.setJwtValidator(
                 org.springframework.security.oauth2.jwt.JwtValidators.createDefaultWithIssuer(issuerUri));
-
         return jwtDecoder;
     }
 
-    /**
-     * Converter for OAuth2 JWT tokens to add SCOPE_ prefix to scopes
-     */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        // Default behavior: converts "scope" claim to authorities with "SCOPE_" prefix
-        return converter;
+        return new JwtAuthenticationConverter();
     }
 
     @Bean
