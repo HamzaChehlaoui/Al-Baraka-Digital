@@ -26,6 +26,7 @@ jobs:
     - name: Run Tests
       run: mvn test
 
+
   docker-build:
     needs: build
     runs-on: ubuntu-latest
