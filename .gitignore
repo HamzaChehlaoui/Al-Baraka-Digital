@@ -59,13 +59,12 @@ bin/
 # ============================================
 # Application Specific
 # ============================================
-# ملفات المستخدمين المرفوعة
 uploads/
-# ملفات السجلات
+
 logs/
 *.log
 log/
-# ملفات الأخطاء
+
 *.txt
 !README.txt
 
@@ -137,8 +136,6 @@ spring-boot-devtools.properties
 # ============================================
 # Docker
 # ============================================
-# إبقاء docker-compose و Dockerfile
-# لكن تجاهل ملفات بناء Docker المحلية
 docker-compose.override.yml
 .docker/
 
