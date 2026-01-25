@@ -5,6 +5,7 @@ import com.albaraka.digital.dto.response.OperationDto;
 import com.albaraka.digital.service.DocumentService;
 import com.albaraka.digital.service.OperationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,23 @@ public class AgentController {
     @GetMapping("/operations/{id}/documents")
     public ResponseEntity<List<DocumentDto>> getOperationDocuments(@PathVariable Long id) {
         return ResponseEntity.ok(documentService.getDocumentsByOperationId(id));
+    }
+
+    @GetMapping("/documents/{documentId}/download")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long documentId) {
+        byte[] fileContent = documentService.downloadDocument(documentId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header("Content-Disposition", "attachment")
+                .body(fileContent);
+    }
+
+    @GetMapping("/documents/{documentId}/view")
+    public ResponseEntity<byte[]> viewDocument(@PathVariable Long documentId) {
+        byte[] fileContent = documentService.downloadDocument(documentId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(fileContent);
     }
 
     @PutMapping("/operations/{id}/approve")
