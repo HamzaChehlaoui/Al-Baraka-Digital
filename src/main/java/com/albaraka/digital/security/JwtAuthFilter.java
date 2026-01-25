@@ -41,11 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         // Skip custom JWT validation for OAuth2-protected endpoints
         // Let OAuth2 Resource Server handle these
-        String requestPath = request.getRequestURI();
-        if (requestPath.equals("/api/agent/operations/pending")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // String requestPath = request.getRequestURI();
+        // if (requestPath.equals("/api/agent/operations/pending")) {
+        //     filterChain.doFilter(request, response);
+        //     return;
+        // }
 
         jwt = authHeader.substring(7);
 

@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -25,27 +26,47 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService userDetailsService;
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    /**
+     * Chain 0: Actuator Health (Docker / Monitoring)
+     * Allows unauthenticated access to /actuator/health ONLY
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/actuator/health")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll()
+                );
+
+        return http.build();
+    }
 
     /**
      * Chain 1: OAuth2 Resource Server
      * Handles ONLY /api/agent/operations/pending
      */
-    @Bean
-    @Order(1)
-    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher("/api/agent/operations/pending")
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(req -> req
-                        .anyRequest().hasAuthority("SCOPE_operations.read"))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt
-                                .decoder(jwtDecoder())
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+//     @Bean
+//     @Order(1)
+//     public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
+//         http
+//                 .securityMatcher("/api/agent/operations/pending")
+//                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+//                 .csrf(AbstractHttpConfigurer::disable)
+//                 .authorizeHttpRequests(req -> req
+//                         .anyRequest().hasAuthority("SCOPE_operations.read"))
+//                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+//                 .oauth2ResourceServer(oauth2 -> oauth2
+//                         .jwt(jwt -> jwt
+//                                 .decoder(jwtDecoder())
+//                                 .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
-        return http.build();
-    }
+//         return http.build();
+//     }
 
     /**
      * Chain 2: API Security (JWT)
@@ -56,6 +77,7 @@ public class SecurityConfig {
     public SecurityFilterChain apiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/**")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
                         .requestMatchers("/api/auth/**").permitAll()
